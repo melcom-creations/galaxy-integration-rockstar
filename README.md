@@ -74,8 +74,6 @@ C:\ProgramData\GOG.com\Galaxy\logs\
 
 ---
 
-## 🛠️ Troubleshooting
-
 ### 🚀 First Start and Initial Sync (Important)
 
 For a clean first run after installing or updating the plugin:
