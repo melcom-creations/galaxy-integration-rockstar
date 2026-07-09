@@ -23,7 +23,7 @@ If you just want to install and sync quickly, follow these steps:
 %localappdata%\GOG.com\Galaxy\plugins\installed\
 ```
 
-4. Ensure the final folder is exactly:
+1. Ensure the final folder is exactly:
 
 ```text
 %localappdata%\GOG.com\Galaxy\plugins\installed\
@@ -34,9 +34,9 @@ If you just want to install and sync quickly, follow these steps:
     └── ...
 ```
 
-5. Start GOG Galaxy.
-6. Start Rockstar Games Launcher and keep it open.
-7. In GOG Galaxy, open the account menu (top-right) and click **Sync integrations**.
+1. Start GOG Galaxy.
+1. Start Rockstar Games Launcher and keep it open.
+1. In GOG Galaxy, open the account menu (top-right) and click **Sync integrations**.
 
 ---
 
@@ -91,10 +91,10 @@ C:\ProgramData\GOG.com\Galaxy\storage\plugins\
 rockstar_774732b5-69c4-405c-b6c9-92cd55740cfe-47439745864581929-storage.db
 ```
 
-3. Start GOG Galaxy.
-4. Start Rockstar Games Launcher and keep it open.
-5. In GOG Galaxy, click **Sync integrations**.
-6. Wait until sync finishes.
+1. Start GOG Galaxy.
+1. Start Rockstar Games Launcher and keep it open.
+1. In GOG Galaxy, click **Sync integrations**.
+1. Wait until sync finishes.
 
 ---
 
@@ -119,7 +119,7 @@ GOG Galaxy scans every folder there during startup. Duplicate plugin folders can
 ## 🙏 Credits
 
 Original community integration:
-https://github.com/tylerbrawl/Galaxy-Plugin-Rockstar
+[https://github.com/tylerbrawl/Galaxy-Plugin-Rockstar](https://github.com/tylerbrawl/Galaxy-Plugin-Rockstar)
 
 64-bit port, maintenance, and improvements:
 melcom
@@ -139,4 +139,4 @@ This project is maintained by one person. Response times may vary.
 GitHub Issues are intentionally disabled.
 
 Contact form:
-https://melcom-creations.github.io/melcom-music/contact.html
+[https://melcom-creations.github.io/melcom-music/contact.html](https://melcom-creations.github.io/melcom-music/contact.html)
