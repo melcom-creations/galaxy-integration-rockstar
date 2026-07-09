@@ -96,20 +96,6 @@ rockstar_774732b5-69c4-405c-b6c9-92cd55740cfe-47439745864581929-storage.db
 5. In GOG Galaxy, click **Sync integrations**.
 6. Wait until sync finishes.
 
-### 🔄 Resetting the Plugin Database
-
-If the plugin behaves unexpectedly after an update:
-
-1. Open:
-
-```text
-C:\ProgramData\GOG.com\Galaxy\storage\plugins\
-```
-
-2. Find files starting with `rockstar_` and ending with `-storage.db`.
-3. Rename each by appending `.old`.
-4. Restart GOG Galaxy and reconnect Rockstar integration if needed.
-
 ---
 
 ## ⚙️ Optional Configuration
