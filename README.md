@@ -64,7 +64,7 @@ C:\ProgramData\GOG.com\Galaxy\logs\
 
 - Compatible with GOG Galaxy 2.1+ (64-bit)
 - Python 3.13 support
-- Updated 64-bit dependencies
+- Bundled 64-bit dependencies
 - Improved stability and compatibility
 - Rockstar Social Club web login support
 - Rockstar Games Launcher detection on Windows
