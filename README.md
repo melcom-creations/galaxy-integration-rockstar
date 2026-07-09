@@ -5,7 +5,7 @@ This project is a maintained 64-bit continuation of the original community plugi
 
 > [!TIP]
 > **TLDR**
-> Install the latest release ZIP into `%localappdata%\GOG.com\Galaxy\plugins\installed\rockstar_774732b5-69c4-405c-b6c9-92cd55740cfe\`.
+> The release ZIP already contains the `rockstar_774732b5-69c4-405c-b6c9-92cd55740cfe` folder, so extract it into `%localappdata%\GOG.com\Galaxy\plugins\installed\`.
 > Keep Rockstar Games Launcher open, then run **Sync integrations** in GOG Galaxy.
 > Status: pre-release; some Rockstar-owned games may still be missing in certain cases.
 
@@ -17,7 +17,7 @@ If you just want to install and sync quickly, follow these steps:
 
 1. Close GOG Galaxy completely.
 2. Download the latest release ZIP from this repository.
-3. Extract it to:
+3. Extract it to the folder below. The ZIP already contains `rockstar_774732b5-69c4-405c-b6c9-92cd55740cfe`:
 
 ```text
 %localappdata%\GOG.com\Galaxy\plugins\installed\
