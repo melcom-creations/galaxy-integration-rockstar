@@ -58,7 +58,7 @@ If the plugin behaves unexpectedly after an update, resetting the local plugin d
 2. Rename each by appending `.old` (e.g. `rockstar_xxxxxxxxx-storage.db` → `rockstar_xxxxxxxxx-storage.db.old`).
 3. Start GOG Galaxy again and reconnect the Rockstar integration if necessary.
 
-### First Start and Initial Sync (Important)
+### 🚀 First Start and Initial Sync (Important)
 
 For a clean first run after installing or updating the plugin, use this flow:
 
