@@ -74,7 +74,7 @@ C:\ProgramData\GOG.com\Galaxy\logs\
 
 ---
 
-## 🛠️ First Start and Troubleshooting
+## 🛠️ Troubleshooting
 
 ### 🚀 First Start and Initial Sync (Important)
 
