@@ -40,7 +40,7 @@ If you just want to install and sync quickly, follow these steps:
 
 ---
 
-## ⚠️ Current Status
+## 📌 Current Status
 
 - This plugin is actively maintained and still in pre-release phase.
 - In some cases, Rockstar-owned games may still be missing.
@@ -74,7 +74,7 @@ C:\ProgramData\GOG.com\Galaxy\logs\
 
 ---
 
-### 🚀 First Start and Initial Sync (Important)
+### 🧭 First Start and Initial Sync (Important)
 
 For a clean first run after installing or updating the plugin:
 
