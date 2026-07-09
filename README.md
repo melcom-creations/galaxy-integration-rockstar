@@ -79,10 +79,16 @@ C:\ProgramData\GOG.com\Galaxy\logs\
 For a clean first run after installing or updating the plugin:
 
 1. Close GOG Galaxy.
-2. If this file exists, delete it:
+2. Open this folder:
 
 ```text
-C:\ProgramData\GOG.com\Galaxy\storage\plugins\rockstar_774732b5-69c4-405c-b6c9-92cd55740cfe-47439745864581929-storage.db
+C:\ProgramData\GOG.com\Galaxy\storage\plugins\
+```
+
+  Then delete this file if it exists:
+
+```text
+rockstar_774732b5-69c4-405c-b6c9-92cd55740cfe-47439745864581929-storage.db
 ```
 
 3. Start GOG Galaxy.
