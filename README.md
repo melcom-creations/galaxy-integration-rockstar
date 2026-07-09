@@ -43,8 +43,9 @@ If you just want to install and sync quickly, follow these steps:
 ## 📌 Current Status
 
 - This plugin is actively maintained and still in pre-release phase.
-- In some cases, Rockstar-owned games may still be missing.
-- Steam and Epic Rockstar titles are shown only when installed.
+- Visibility is intentionally aligned with Rockstar Games Launcher behavior.
+- Steam/Epic Rockstar titles are shown only when installed.
+- Rockstar-owned titles should be shown; in some cases they may still be missing while this pre-release is being improved.
 
 If a Rockstar-owned game is missing, please send logs to:
 
