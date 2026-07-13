@@ -130,10 +130,11 @@ GOG Galaxy scans every folder there during startup. Duplicate plugin folders can
 
 ## 🙏 Credits
 
-Original community integration:
+**Original Community Integration**  
+Tylerbrawl  
 [https://github.com/tylerbrawl/Galaxy-Plugin-Rockstar](https://github.com/tylerbrawl/Galaxy-Plugin-Rockstar)
 
-64-bit port, maintenance, and improvements:
+**64-bit Port, Maintenance and Improvements**  
 melcom
 
 ---
