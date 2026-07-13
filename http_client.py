@@ -18,6 +18,7 @@ import logging as log
 import pickle
 import re
 import urllib.parse
+from typing import Any, Dict, Optional, Tuple, cast
 
 from html.parser import HTMLParser
 from time import time
@@ -27,8 +28,8 @@ from yarl import URL
 
 @dataclasses.dataclass
 class Token(object):
-    _token = None
-    _expires = None
+    _token: Optional[str] = None
+    _expires: Optional[float] = None
 
     def set_token(self, token, expiration):
         self._token, self._expires = token, expiration
@@ -41,7 +42,7 @@ class Token(object):
 
     @property
     def expired(self):
-        return self._expires <= time()
+        return self._expires is None or self._expires <= time()
 
 
 class CookieJar(aiohttp.CookieJar):
@@ -61,25 +62,25 @@ class CookieJar(aiohttp.CookieJar):
     # and retrieval.
 
     def remove_cookie(self, remove_name, domain="signin.rockstargames.com"):
-        for key, morsel in self._cookies[domain].items():
-            if remove_name == morsel.key:
-                del self._cookies[domain][key]
-                return
+        found = any(morsel.key == remove_name and domain in morsel['domain'] for morsel in self)
+        if found:
+            self.clear(lambda morsel: morsel.key == remove_name and domain in morsel['domain'])
+            return
         log.debug("ROCKSTAR_REMOVE_COOKIE_ERROR: The cookie " + remove_name + " from domain " + domain +
                   " does not exist!")
 
     def remove_cookie_regex(self, remove_regex, domain="signin.rockstargames.com"):
-        for key, morsel in self._cookies[domain].items():
-            if re.search(remove_regex, morsel.key):
-                del self._cookies[domain][key]
-                return
+        found = any(re.search(remove_regex, morsel.key) and domain in morsel['domain'] for morsel in self)
+        if found:
+            self.clear(lambda morsel: bool(re.search(remove_regex, morsel.key)) and domain in morsel['domain'])
+            return
         log.debug("ROCKSTAR_REMOVE_COOKIE_REGEX_ERROR: There is no cookie from domain " + domain + " that matches the "
                   "regular expression " + remove_regex + "!")
 
     def get(self, cookie_name, domain="signin.rockstargames.com"):
-        for key, morsel in self._cookies[domain].items():
-            if cookie_name == morsel.key:
-                return self._cookies[domain][key].value
+        for morsel in self:
+            if cookie_name == morsel.key and domain in morsel['domain']:
+                return morsel.value
         log.debug("ROCKSTAR_GET_COOKIE_ERROR: The cookie " + cookie_name + " from domain " + domain +
                   " does not exist!")
         return ''
@@ -89,15 +90,19 @@ class BackendClient:
     def __init__(self, store_credentials):
         self._debug_always_refresh = CONFIG_OPTIONS['debug_always_refresh']
         self._store_credentials = store_credentials
-        self.bearer = None
+        self.bearer: Optional[str] = None
+        self.refresh: Optional[str] = None
         # The refresh token here is the RMT cookie. The other refresh token is the rsso cookie. The RMT cookie is blank
         # for users not using two-factor authentication.
         self.refresh_token = Token()
-        self._fingerprint = None
-        self.user = None
+        self._fingerprint: Optional[str] = None
+        self.user: Optional[Dict[str, Any]] = None
         local_time_zone = dateutil.tz.tzlocal()
-        self._utc_offset = local_time_zone.utcoffset(datetime.datetime.now(local_time_zone)).total_seconds() / 60
-        self._current_session = None
+        utc_offset = local_time_zone.utcoffset(datetime.datetime.now(local_time_zone))
+        self._utc_offset = (utc_offset or datetime.timedelta()).total_seconds() / 60
+        # create_session() initializes this before any request. The cast expresses that lifecycle contract to the
+        # type checker without changing the runtime state used by the Galaxy plugin API.
+        self._current_session: aiohttp.ClientSession = cast(aiohttp.ClientSession, None)
         self._auth_lost_callback = None
         self._current_auth_token = None
         self._current_sc_token = None
@@ -105,10 +110,13 @@ class BackendClient:
         self._refreshing = False
 
     async def close(self):
-        await self._current_session.close()
+        if self._current_session is not None:
+            await self._current_session.close()
 
     def get_credentials(self):
-        creds = self.user
+        if self.user is None:
+            raise AuthenticationRequired
+        creds = dict(self.user)
         morsel_list = []
         for morsel in self._current_session.cookie_jar.__iter__():
             morsel_list.append(morsel)
@@ -120,13 +128,13 @@ class BackendClient:
         return creds
 
     def set_cookies_updated_callback(self, callback):
-        self._current_session.cookie_jar.set_cookies_updated_callback(callback)
+        cast(CookieJar, self._current_session.cookie_jar).set_cookies_updated_callback(callback)
 
     def update_cookie(self, cookie):
         # The rsso cookie name can vary, so remove any old rsso cookie first to keep refresh-token handling stable.
 
         if re.search("^rsso", cookie['name']):
-            self._current_session.cookie_jar.remove_cookie_regex("^rsso")
+            cast(CookieJar, self._current_session.cookie_jar).remove_cookie_regex("^rsso")
 
         if cookie['name'] != '':
             cookie_object = SimpleCookie()
@@ -156,9 +164,14 @@ class BackendClient:
         return self._current_sc_token
 
     def get_named_cookie(self, cookie_name):
-        return self._current_session.cookies[cookie_name]
+        for morsel in self._current_session.cookie_jar:
+            if morsel.key == cookie_name:
+                return morsel.value
+        raise KeyError(cookie_name)
 
     def get_rockstar_id(self):
+        if self.user is None:
+            raise AuthenticationRequired
         return self.user["rockstar_id"]
 
     def set_refresh_token(self, token):
@@ -211,8 +224,10 @@ class BackendClient:
                 log.exception(f"ROCKSTAR_REQUEST_RETRY_LIMIT: Giving up on {url} after {_retry_count} retries. "
                               f"Last exception: {safe_exception_repr(e)}.")
                 raise
-            log.exception(f"WARNING: The request failed with exception {safe_exception_repr(e)}. Attempting to "
-                          f"refresh credentials (retry {_retry_count + 1}/3)...")
+            # A first 401 followed by a successful bearer refresh is recoverable control flow, not an exception that
+            # warrants an ERROR-level traceback. The final failed retry still logs the full diagnostic above.
+            log.warning(f"ROCKSTAR_REQUEST_RETRY: The request failed with {safe_exception_repr(e)}. Attempting to "
+                        f"refresh Social Club credentials (retry {_retry_count + 1}/3)...")
             await self._refresh_credentials_social_club_light()
             return await self.get_json_from_request_strict(url, include_default_headers, additional_headers,
                                                              _retry_count + 1)
@@ -322,6 +337,8 @@ class BackendClient:
             if LOG_SENSITIVE_DATA:
                 log.debug("ROCKSTAR_USER_GRAPH_JSON: " + str(resp_json))
 
+            if self._current_auth_token is None:
+                raise AuthenticationRequired
             cookie_json = json.loads(urllib.parse.unquote(self._current_auth_token))
             if LOG_SENSITIVE_DATA:
                 log.debug("ROCKSTAR_AUTH_COOKIE: " + str(cookie_json))
@@ -470,7 +487,7 @@ class BackendClient:
             def handle_starttag(self, tag, attrs):
                 if not self.rank_internal_pos and tag == "div" and len(attrs) > 0:
                     class_, name = attrs[0]
-                    if not re.search(r"^rankHex right-grad .*", name):
+                    if not name or not re.search(r"^rankHex right-grad .*", name):
                         return
                     self.rank_internal_pos = self.getpos()[0]
 
@@ -481,7 +498,7 @@ class BackendClient:
                     self.char_rank = data
                 elif not self.char_title and self.getpos()[0] == (self.rank_internal_pos + 2):
                     # Social Club may omit title for high ranks; normalize to known default.
-                    if int(self.char_rank) >= 105:
+                    if self.char_rank is not None and int(self.char_rank) >= 105:
                         self.char_title = "Kingpin"
                     else:
                         self.char_title = data
@@ -579,6 +596,8 @@ class BackendClient:
         max_rank = 0
         highest_rank = ""
         for rank, val in ranks.items():
+            if val is None:
+                continue
             if val > max_rank:
                 max_rank = val
                 highest_rank = rank
@@ -593,7 +612,7 @@ class BackendClient:
                             game_id="13",
                             in_game_status=f"Red Dead Online: {char_name} - Rank {char_rank} {highest_rank}")
 
-    def _get_rsso_cookie(self) -> (str, str):
+    def _get_rsso_cookie(self) -> Tuple[str, str]:
         for morsel in self._current_session.cookie_jar.__iter__():
             if re.search("^rsso", morsel.key):
                 rsso_name = morsel.key
@@ -603,15 +622,18 @@ class BackendClient:
                 if LOG_SENSITIVE_DATA:
                     log.debug(f"ROCKSTAR_RSSO_VALUE: {rsso_value}")
                 return rsso_name, rsso_value
+        raise AuthenticationRequired
 
     async def refresh_credentials(self):
         while self._refreshing:
             # Serialize refresh attempts.
             await asyncio.sleep(3)
         self._refreshing = True
-        await self._refresh_credentials_base()
-        await self._refresh_credentials_social_club()
-        self._refreshing = False
+        try:
+            await self._refresh_credentials_base()
+            await self._refresh_credentials_social_club()
+        finally:
+            self._refreshing = False
 
     async def _refresh_credentials_base(self):
         # Base-site refresh: fingerprint check -> gateway token exchange.
@@ -669,10 +691,17 @@ class BackendClient:
                 log.debug(f"ROCKSTAR_NEW_AUTH_REFRESH: ***")
             if old_auth != new_auth:
                 log.debug("ROCKSTAR_REFRESH_SUCCESS: The user has been successfully re-authenticated!")
+        except aiohttp.ClientResponseError as e:
+            if e.status >= 500:
+                log.warning("ROCKSTAR_REFRESH_NETWORK_FAILURE: Rockstar's authentication service returned "
+                            f"HTTP {e.status}. Keeping stored credentials for a later retry.")
+                raise NetworkError
+            log.exception("ROCKSTAR_REFRESH_FAILURE: The attempt to re-authenticate the user has failed with the "
+                          "exception " + safe_exception_repr(e) + ".")
+            raise InvalidCredentials
         except Exception as e:
             log.exception("ROCKSTAR_REFRESH_FAILURE: The attempt to re-authenticate the user has failed with the "
-                          "exception " + safe_exception_repr(e) + ". Logging the user out...")
-            self._refreshing = False
+                          "exception " + safe_exception_repr(e) + ".")
             raise InvalidCredentials
 
     async def _refresh_credentials_social_club_light(self):
@@ -699,7 +728,6 @@ class BackendClient:
                 if old_auth != self._current_sc_token:
                     log.debug("ROCKSTAR_SC_LIGHT_REFRESH_SUCCESS: The Social Club user was successfully "
                               "re-authenticated!")
-                self._refreshing = False
             else:
                 # Fallback to full refresh when bearer token is not returned.
                 log.warning("ROCKSTAR_SC_LIGHT_REFRESH_FAILED: The light method for refreshing the Social Club "
@@ -712,6 +740,12 @@ class BackendClient:
                             "authentication has failed. Falling back to the strict refresh method...")
                 self._refreshing = False
                 await self.refresh_credentials()
+            elif e.status >= 500:
+                raise NetworkError
+            else:
+                raise
+        finally:
+            self._refreshing = False
 
     async def _refresh_credentials_social_club(self):
         # Full Social Club bearer refresh flow used by endpoints requiring fresh site auth.
@@ -795,12 +829,18 @@ class BackendClient:
                     break
         except aiohttp.ClientConnectorError:
             log.error(f"ROCKSTAR_PLUGIN_OFFLINE: The user is not online.")
-            self._refreshing = False
             raise NetworkError
+        except aiohttp.ClientResponseError as e:
+            if e.status >= 500:
+                log.warning("ROCKSTAR_SC_REFRESH_NETWORK_FAILURE: Rockstar's Social Club authentication service "
+                            f"returned HTTP {e.status}. Keeping stored credentials for a later retry.")
+                raise NetworkError
+            log.exception(f"ROCKSTAR_SC_REFRESH_FAILURE: Social Club rejected the stored session with "
+                          f"{safe_exception_repr(e)}.")
+            raise InvalidCredentials
         except Exception as e:
             log.exception(f"ROCKSTAR_SC_REFRESH_FAILURE: The attempt to re-authenticate the user on the Social Club has"
-                          f" failed with the exception {safe_exception_repr(e)}. Logging the user out...")
-            self._refreshing = False
+                          f" failed with the exception {safe_exception_repr(e)}.")
             raise InvalidCredentials
 
     async def authenticate(self):
@@ -811,6 +851,8 @@ class BackendClient:
             self._auth_lost_callback = None
 
         self.bearer = self._current_sc_token
+        if not self.bearer:
+            raise InvalidCredentials
         if LOG_SENSITIVE_DATA:
             log.debug("ROCKSTAR_HTTP_CHECK: Got bearer token: " + self.bearer)
         else:
@@ -847,9 +889,13 @@ class BackendClient:
         if LOG_SENSITIVE_DATA:
             log.debug(resp_user_text)
         # The user's profile fields are nested several levels deep inside the response.
-        working_dict = resp_user_text['accounts'][0]['rockstarAccount']
-        display_name = working_dict['displayName']
-        rockstar_id = working_dict['rockstarId']
+        try:
+            working_dict = resp_user_text['accounts'][0]['rockstarAccount']
+            display_name = working_dict['displayName']
+            rockstar_id = working_dict['rockstarId']
+        except (KeyError, IndexError, TypeError):
+            log.warning("ROCKSTAR_PROFILE_INCOMPLETE: Social Club returned incomplete profile data.")
+            raise InvalidCredentials
         if LOG_SENSITIVE_DATA:
             log.debug("ROCKSTAR_HTTP_CHECK: Got display name: " + display_name + " / Got Rockstar ID: " +
                       str(rockstar_id))

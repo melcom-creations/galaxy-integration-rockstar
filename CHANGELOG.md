@@ -4,6 +4,35 @@ All notable changes to this plugin will be documented in this file.
 
 ---
 
+## Version 2.0.10-64bit
+
+### Overview for Version 2.0.10-64bit
+
+Maintenance release focused on reliable local library detection, authentication stability, and Social Club friend synchronization.
+
+### Changed in Version 2.0.10-64bit
+
+- **Local-first library synchronization:** the normal ownership and installation scan now relies on Rockstar Games Launcher logs and the existing Windows registry, GameConfigStore, and Steam fallbacks instead of the obsolete Social Club played-games scraper.
+- **Optional legacy compatibility mode:** the inherited online scraper remains available through `enable_legacy_online_game_scraper`, but is disabled by default and no longer affects normal synchronization.
+- **Updated setup guidance:** the README now provides clearer installation, first-start, and initial-sync instructions.
+- **Cleaner diagnostics:** expected fallback conditions and successfully recovered Social Club requests no longer produce misleading error-level log entries.
+
+### Fixed in Version 2.0.10-64bit
+
+- **Faster local game scans:** install paths are reused during each scan instead of repeating the complete registry, Launcher log, GameConfigStore, and Steam lookup for the same title.
+- **More reliable friend imports:** cold-start responses are retried briefly, partial pages are merged safely, and the last successful friend list remains available when Social Club times out.
+- **Stable authentication retries:** temporary Rockstar service failures no longer invalidate stored credentials or leave concurrent requests blocked behind a failed token refresh.
+- **Safer session handling:** incomplete cookies, tokens, or profile data now fail cleanly instead of crashing synchronization.
+- **Legacy scraper failure isolation:** a failed optional scraper request is stopped for the current Galaxy session without affecting library import, installation detection, launching, or local playtime tracking.
+- **Localized install-size parsing:** game sizes are now recognized when Windows prints the summary unit as `Bytes` instead of lowercase `bytes`.
+
+### Known Issues / Workarounds for Version 2.0.10-64bit
+
+- **Duplicate GTA IV Rockstar source (`rockstar_12210`):** a stale Galaxy database key can occasionally create an additional GTA IV source entry. Removing the affected `rockstar_12210` references from `galaxy-2.0.db`, restarting Galaxy, and synchronizing the integration resolves it.
+- **Brief duplicate achievements on merged releases:** Galaxy can momentarily show both Steam and Rockstar achievement catalogs when the releases are combined, as observed with Max Payne 3. The correct Rockstar-only list appears after loading finishes; no achievements are assigned to the wrong platform.
+
+---
+
 ## Version 2.0.9-64bit (Pre-Release)
 
 ### Overview for Version 2.0.9-64bit
@@ -12,9 +41,9 @@ Maintenance release focused on GTA V Enhanced launch reliability and stale-entry
 
 ### Changed in Version 2.0.9-64bit
 
-- **GTA IV alternate executable fallback:** if **PlayGTAIV.exe** cannot be found anywhere under the detected install path, `launch_game_from_title_id()` now also checks for **LaunchGTAIV.exe**, a known rename from a long-standing community fix for Rockstar Games Launcher issues. The wrapper-launch behavior (-launchTitleInFolder, @commandline.txt) is preserved for the renamed exe as well.
+- **GTA IV alternate executable fallback:** if [b]PlayGTAIV.exe[/b] cannot be found anywhere under the detected install path, [i]launch_game_from_title_id()[/i] now also checks for [b]LaunchGTAIV.exe[/b], a known rename from a long-standing community fix for Rockstar Games Launcher issues. The wrapper-launch behavior (-launchTitleInFolder, @commandline.txt) is preserved for the renamed exe as well.
 - **Clearer launch failure log message:** the error now states that alternate names and all subfolders were checked, and suggests verifying the game files or reinstalling, to help distinguish a broken/incomplete local install from an actual plugin bug.
-- **Social Club played-games auth fix:** `get_played_games()` previously only retried once with a "light" BearerToken refresh, which could succeed while the underlying Social Club session cookies stayed stale, causing the same 401 (scauth) to repeat on every scan and forcing a fallback to the launcher log every time. A second retry stage now performs a full re-authentication if the light refresh is insufficient.
+- **Social Club played-games auth fix:** [i]get_played_games()[/i] previously only retried once with a "light" BearerToken refresh, which could succeed while the underlying Social Club session cookies stayed stale, causing the same 401 (scauth) to repeat on every scan and forcing a fallback to the launcher log every time. A second retry stage now performs a full re-authentication if the light refresh is insufficient.
 - **Reduced log noise from launcher-log fallback:** reading to the end of a launcher log file without finding all games is expected control flow (it happens for every old/empty rotated log file), not an actual error. This is now logged at debug level instead of error level.
 
 ### Fixed in Version 2.0.9-64bit

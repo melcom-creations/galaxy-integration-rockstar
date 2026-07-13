@@ -64,7 +64,8 @@ class RockstarPlugin(Plugin):
         super().__init__(Platform.Rockstar, __version__, reader, writer, token)
         log.debug(f"ROCKSTAR_CONFIG_STATE: Plugin version {__version__} started. Config file in use: "
                   f"{config_parser.CONFIG_PATH}. Loaded value of enable_steam_fallback: "
-                  f"{CONFIG_OPTIONS.get('enable_steam_fallback')}.")
+                  f"{CONFIG_OPTIONS.get('enable_steam_fallback')}; enable_legacy_online_game_scraper: "
+                  f"{CONFIG_OPTIONS.get('enable_legacy_online_game_scraper')}.")
         self.games_cache = games_cache
         self._http_client = BackendClient(self.store_credentials)
         self._local_client = None
@@ -73,6 +74,10 @@ class RockstarPlugin(Plugin):
         self.presence_cache = {}
         self.owned_games_cache = []
         self.last_online_game_check = time() - 300
+        # The legacy Social Club played-games scraper uses undocumented browser endpoints. One failure opens this
+        # circuit breaker for the rest of the process so a healthy local integration is not forced through repeated
+        # credential refresh attempts every five minutes.
+        self.legacy_online_game_scraper_available = CONFIG_OPTIONS['enable_legacy_online_game_scraper']
         self.local_games_cache = {}
         self.game_time_cache = {}
         self.running_games_info_list = {}
@@ -270,12 +275,25 @@ class RockstarPlugin(Plugin):
 
         url = ("https://scapi.rockstargames.com/friends/getFriendsFiltered?onlineService=sc&nickname=&"
                "pageIndex=0&pageSize=30")
-        try:
-            current_page = await self._http_client.get_json_from_request_strict(url)
-        except TimeoutError:
-            log.warning("ROCKSTAR_FRIENDS_TIMEOUT: The request to get the user's friends at page index 0 timed out. "
-                        "Returning the cached list...")
-            return self.friends_cache
+        current_page = None
+        for attempt in range(3):
+            try:
+                candidate = await self._http_client.get_json_from_request_strict(url)
+                account_list = candidate.get('rockstarAccountList') if isinstance(candidate, dict) else None
+                if isinstance(account_list, dict):
+                    current_page = candidate
+                    break
+                log.debug(f"ROCKSTAR_FRIENDS_STARTUP_RETRY: Social Club returned no friend-list payload "
+                          f"(attempt {attempt + 1}/3).")
+            except TimeoutError:
+                log.warning(f"ROCKSTAR_FRIENDS_TIMEOUT: The request to get the user's friends at page index 0 "
+                            f"timed out (attempt {attempt + 1}/3).")
+            if attempt < 2:
+                await asyncio.sleep(1)
+        if current_page is None:
+            log.warning("ROCKSTAR_FRIENDS_CACHE_FALLBACK: Social Club did not return a complete startup response. "
+                        "Returning the cached friend list.")
+            return list(self.friends_cache)
         if LOG_SENSITIVE_DATA:
             log.debug("ROCKSTAR_FRIENDS_REQUEST: " + str(current_page))
         else:
@@ -296,9 +314,20 @@ class RockstarPlugin(Plugin):
                         return_list.append(friend)
                 except TimeoutError:
                     log.warning(f"ROCKSTAR_FRIENDS_TIMEOUT: The request to get the user's friends at page index {i} "
-                                f"timed out. Returning the cached list...")
-                    return self.friends_cache
-        return return_list
+                                f"timed out. Returning the merged partial and cached list...")
+                    return self._merge_friend_lists(return_list, self.friends_cache)
+        return self._merge_friend_lists(return_list, self.friends_cache)
+
+    @staticmethod
+    def _merge_friend_lists(*friend_lists):
+        merged = []
+        seen_ids = set()
+        for friend_list in friend_lists:
+            for friend in friend_list:
+                if friend.user_id not in seen_ids:
+                    seen_ids.add(friend.user_id)
+                    merged.append(friend)
+        return merged
 
     async def _get_friends(self, url: str) -> List[UserInfo]:
         try:
@@ -338,23 +367,29 @@ class RockstarPlugin(Plugin):
         return return_list
 
     async def get_owned_games_online(self):
-        # Get the list of games_played from https://socialclub.rockstargames.com/ajax/getGoogleTagManagerSetupData.
+        # Optional compatibility path inherited from the original plugin. This endpoint is undocumented and must not
+        # be treated as authoritative authentication or required for the maintained Windows integration.
         owned_title_ids = []
-        online_check_success = True
+        online_check_success = False
         self.last_online_game_check = time()
+        if not self.legacy_online_game_scraper_available:
+            return owned_title_ids, online_check_success
         try:
             played_games = await self._http_client.get_played_games()
             for game in played_games:
                 owned_title_ids.append(game)
                 log.debug("ROCKSTAR_ONLINE_GAME: Found played game " + game + "!")
+            online_check_success = True
         except Exception as e:
-            log.error("ROCKSTAR_PLAYED_GAMES_ERROR: The exception " + safe_exception_repr(e) + " was thrown when "
-                      "attempting to get the user's played games online. Falling back to log file check...")
-            online_check_success = False
+            self.legacy_online_game_scraper_available = False
+            log.warning("ROCKSTAR_LEGACY_SCRAPER_DISABLED: The optional Social Club played-games request failed with "
+                        + safe_exception_repr(e) + ". The scraper is disabled for this session; launcher logs and "
+                        "local installation data remain active.")
         return owned_title_ids, online_check_success
 
     async def get_owned_games(self, owned_title_ids=None, online_check_success=False):
-        # Build owned games from launcher logs, online data, and local install fallbacks.
+        # Build owned games primarily from launcher logs and local install data. Online data is accepted only when the
+        # explicitly enabled legacy compatibility scraper completed successfully.
         if owned_title_ids is None:
             owned_title_ids = []
         if not self.is_authenticated():
@@ -383,8 +418,8 @@ class RockstarPlugin(Plugin):
                 owned_title_ids = await self.parse_log_file(log_file, owned_title_ids, online_check_success)
                 break
             except NoGamesInLogException:
-                log.warning("ROCKSTAR_LOG_WARNING: There are no owned games listed in " + str(log_file) + ". Moving to "
-                            "the next log file...")
+                log.debug("ROCKSTAR_LOG_EMPTY: There are no owned games listed in " + str(log_file) + ". Moving to "
+                          "the next log file...")
                 current_log_count += 1
             except NoLogFoundException:
                 log.warning("ROCKSTAR_LAST_LOG_REACHED: There are no more log files that can be found and/or read "
@@ -393,18 +428,8 @@ class RockstarPlugin(Plugin):
             except Exception:
                 break
         if current_log_count == 10:
-            log.warning("ROCKSTAR_LAST_LOG_REACHED: There are no more log files that can be found and/or read "
-                        "from. Assuming that the online list is correct...")
-
-        # If log parsing yields nothing but online fetch succeeded, use online data as fallback.
-        if not owned_title_ids and online_check_success:
-            try:
-                played_games = await self._http_client.get_played_games()
-                if played_games:
-                    owned_title_ids = list(played_games)
-                    log.debug("ROCKSTAR_ONLINE_FALLBACK: Using online played games list as fallback")
-            except Exception:
-                log.debug("ROCKSTAR_ONLINE_FALLBACK_FAILED: Could not fetch online played games for fallback")
+            log.debug("ROCKSTAR_LAST_LOG_REACHED: All available launcher logs were checked. Keeping the existing "
+                      "owned-games cache and confirmed local installations.")
 
         # Last-resort ownership fallback: confirmed local installs (registry/log/Steam checks).
         if not owned_title_ids and IS_WINDOWS and self._local_client:
@@ -611,13 +636,14 @@ class RockstarPlugin(Plugin):
         log.info(f"Opening Rockstar website {url}")
         webbrowser.open(url)
 
-    def check_game_status(self, title_id):
+    def check_game_status(self, title_id, game_installed=None):
         state = LocalGameState.None_
 
         if not self._local_client:
             return LocalGame(str(self.games_cache[title_id]["rosTitleId"]), state)
 
-        game_installed = self._local_client.get_path_to_game(title_id)
+        if game_installed is None:
+            game_installed = self._local_client.get_path_to_game(title_id)
         if game_installed:
             state |= LocalGameState.Installed
 
@@ -647,7 +673,7 @@ class RockstarPlugin(Plugin):
                     continue
                 game_installed = self._local_client.get_path_to_game(title_id)
                 if title_id != "launcher" and game_installed:
-                    local_game = self.check_game_status(title_id)
+                    local_game = self.check_game_status(title_id, game_installed)
                     local_games[title_id] = local_game
                     local_list.append(local_game)
                 else:
@@ -659,17 +685,15 @@ class RockstarPlugin(Plugin):
     async def check_for_new_games(self):
         self.checking_for_new_games = True
         try:
-            # The Social Club prevents the user from making too many requests in a given time span to prevent a
-            # denial of service attack. As such, we need to limit online checking to every 5 minutes. For Windows
-            # devices, log file checks will still occur every minute, but for other users, checking games only
-            # happens every 5 minutes.
+            # Windows ownership is maintained from Rockstar Launcher logs and local installation sources. The old
+            # Social Club tracking-page scraper is optional, rate-limited, and protected by a per-session breaker.
             owned_title_ids = None
             online_check_success = False
-            if not self.last_online_game_check or time() >= self.last_online_game_check + 300:
+            if self.legacy_online_game_scraper_available and \
+                    (not self.last_online_game_check or time() >= self.last_online_game_check + 300):
                 owned_title_ids, online_check_success = await self.get_owned_games_online()
-            elif IS_WINDOWS:
-                log.debug("ROCKSTAR_SC_ONLINE_GAMES_SKIP: No attempt has been made to scrape the user's games from "
-                          "the Social Club, as it has not been 5 minutes since the last check.")
+            elif CONFIG_OPTIONS['enable_legacy_online_game_scraper'] and self.legacy_online_game_scraper_available:
+                log.debug("ROCKSTAR_LEGACY_SCRAPER_RATE_LIMITED: Waiting for the five-minute compatibility interval.")
             await self.get_owned_games(owned_title_ids, online_check_success)
             await asyncio.sleep(60 if IS_WINDOWS else 300)
         finally:

@@ -475,8 +475,9 @@ class LocalClient:
             return None
         game_size_line = line_list[len(line_list) - 2]
         size = None
-        if "bytes" in game_size_line:
-            size = int([str(s) for s in game_size_line.split() if s.isdigit()][1])
+        size_fields = [int(s) for s in game_size_line.split() if s.isdigit()]
+        if "bytes" in game_size_line.casefold() and len(size_fields) >= 2:
+            size = size_fields[1]
         if size:
             log.debug(f"ROCKSTAR_GAME_SIZE: The size of {title_id} is {size} bytes.")
         else:

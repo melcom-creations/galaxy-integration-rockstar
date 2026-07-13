@@ -27,7 +27,8 @@ CONFIG_OPTIONS = get_config_options([
     Option(option_name='log_sensitive_data'),
     Option(option_name='debug_always_refresh'),
     Option(option_name='rockstar_launcher_path_override', str_option=True, default_value=None),
-    Option(option_name='enable_steam_fallback', default_value=True)
+    Option(option_name='enable_steam_fallback', default_value=True),
+    Option(option_name='enable_legacy_online_game_scraper', default_value=False)
 ])
 
 LOG_SENSITIVE_DATA = CONFIG_OPTIONS['log_sensitive_data']
@@ -102,6 +103,7 @@ async def get_time_passed(old_time: int) -> str:
         weeks_passed = int(days_passed / 7)
         return f"{weeks_passed} Weeks Ago" if weeks_passed != 1 else "1 Week Ago"
     return f"{days_passed} Days Ago" if days_passed != 1 else "1 Day Ago"
+
 
 
 

@@ -2,7 +2,7 @@
   "name": "Galaxy Rockstar plugin",
   "platform": "rockstar",
   "guid": "774732b5-69c4-405c-b6c9-92cd55740cfe",
-  "version": "2.0.9-64bit",
+  "version": "2.0.10-64bit",
   "description": "Rockstar Games integration for GOG Galaxy 2.1+ (64-bit)",
   "author": "melcom",
   "url": "https://github.com/melcom-creations/galaxy-integration-rockstar",

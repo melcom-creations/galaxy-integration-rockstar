@@ -73,6 +73,17 @@ C:\ProgramData\GOG.com\Galaxy\logs\
 - Playtime cache persistence on shutdown
 - Bundled `modules/` dependencies
 
+### Ownership and Social Club compatibility
+
+On Windows, owned games are determined from Rockstar Games Launcher logs and confirmed local installation sources.
+The original plugin's undocumented Social Club "played games" web scraper is disabled by default because Rockstar's
+current sign-in flow no longer refreshes that legacy browser session reliably. This does not affect library import,
+installation detection, launching, local playtime tracking, or the normal Rockstar Games Launcher login.
+
+Advanced diagnostics can temporarily restore the old request with
+`enable_legacy_online_game_scraper=True` in `config.cfg`. A failed request disables it again for the remainder of that
+plugin session so it cannot create a five-minute authentication-error loop.
+
 ---
 
 ### 🧭 First Start and Initial Sync (Important)
@@ -135,12 +146,9 @@ Big thanks to [MacStew](https://www.gog.com/u/MacStew) for testing and for track
 
 ## 🤝 Support & Feedback
 
-This project is developed and maintained by one person. Response times may vary, especially during periods when health-related limitations reduce available development time.
+This project is maintained by one person. Response times may vary.
 
-**GitHub Issues are intentionally disabled.**
+GitHub Issues are intentionally disabled.
 
-If you would like to report a bug or suggest an improvement, please use the contact form on my website:
-
-📩 https://melcom-creations.github.io/melcom-music/contact.html
-
-Thank you for your patience and support!
+Contact form:
+[https://melcom-creations.github.io/melcom-music/contact.html](https://melcom-creations.github.io/melcom-music/contact.html)
