@@ -1,6 +1,6 @@
-# Rockstar Games Launcher Integration Plugin for GOG Galaxy 2.1+ (64-bit)
+# Rockstar Games Integration Plugin for GOG Galaxy 2.1+ (64-bit)
 
-This repository contains the Rockstar Games Launcher integration plugin for the native 64-bit version of GOG Galaxy 2.1+. It is based on the original community integration and has been updated for the current GOG Galaxy client and Python 3.13. The project includes updated game detection, achievement support, local playtime tracking, compatibility fixes, stability improvements, and ongoing maintenance.
+This repository contains the Rockstar Games integration plugin for the native 64-bit version of GOG Galaxy 2.1+. It is based on the original community integration and has been updated for the current GOG Galaxy client and Python 3.13. The project includes updated game detection, achievement support, local playtime tracking, compatibility fixes, stability improvements, and ongoing maintenance.
 
 ---
 
@@ -23,7 +23,7 @@ This repository contains the Rockstar Games Launcher integration plugin for the 
 
 ### Automatic Installation with Plugin Updater (Recommended)
 
-The easiest way to install the Rockstar Games Launcher integration is with the [melcom GOG Galaxy Plugin Updater](https://github.com/melcom-creations/galaxy-integrations-64bit/tree/main/tools/melcom-galaxy_plugin_updater). The updater detects existing integrations and can install any supported melcom plugins that are still missing.
+The easiest way to install the Rockstar Games integration is with the [melcom GOG Galaxy Plugin Updater](https://github.com/melcom-creations/galaxy-integrations-64bit/tree/main/tools/melcom-galaxy_plugin_updater). The updater detects existing integrations and can install any supported melcom plugins that are still missing.
 
 1. Download and extract the Plugin Updater.
 2. Double-click `update-plugins.bat`.
