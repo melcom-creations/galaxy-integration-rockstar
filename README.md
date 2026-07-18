@@ -1,6 +1,6 @@
 # Rockstar Games Integration Plugin for GOG Galaxy 2.1+ (64-bit)
 
-This repository contains the Rockstar Games integration plugin for the native 64-bit version of GOG Galaxy 2.1+. It is based on the original community integration and has been updated for the current GOG Galaxy client and Python 3.13. The project includes updated game detection, achievement support, local playtime tracking, compatibility fixes, stability improvements, and ongoing maintenance.
+This plugin imports supported Rockstar Games titles into GOG Galaxy 2.1+ 64-bit. Based on the original community integration, it has been updated for the current GOG Galaxy client and Python 3.13, with achievements, improved game detection, and local playtime tracking.
 
 ---
 
@@ -14,8 +14,6 @@ This repository contains the Rockstar Games integration plugin for the native 64
 * Supports Rockstar Social Club web authentication
 * Detects installed Steam and Epic versions of supported Rockstar games
 * Includes optional Steam library fallback detection
-* Supports GOG Galaxy 2.1+ 64-bit and Python 3.13
-* Includes bundled dependencies, compatibility fixes, and stability improvements
 
 ---
 
@@ -23,7 +21,7 @@ This repository contains the Rockstar Games integration plugin for the native 64
 
 ### Automatic Installation with Plugin Updater (Recommended)
 
-The easiest way to install the Rockstar Games integration is with the [melcom GOG Galaxy Plugin Updater](https://github.com/melcom-creations/galaxy-integrations-64bit/tree/main/tools/melcom-galaxy_plugin_updater). The updater detects existing integrations and can install any supported melcom plugins that are still missing.
+Use the [melcom GOG Galaxy Plugin Updater](https://github.com/melcom-creations/galaxy-integrations-64bit/tree/main/tools/melcom-galaxy_plugin_updater) to install or update the integration automatically.
 
 1. Download and extract the Plugin Updater.
 2. Double-click `update-plugins.bat`.
@@ -32,7 +30,7 @@ The easiest way to install the Rockstar Games integration is with the [melcom GO
 
 ### Manual Installation
 
-1. Close GOG Galaxy completely and make sure it is no longer running in the system tray.
+1. Close GOG Galaxy completely, including the system tray application.
 2. Download the latest release package from this repository.
 3. Extract the ZIP archive directly into:
 
@@ -52,6 +50,9 @@ The release ZIP already contains the required plugin folder. The resulting direc
 ```
 
 4. Continue with **First Start and Initial Sync** below.
+
+> [!IMPORTANT]
+> Do not place backup copies of this plugin inside the `plugins\installed` directory. GOG Galaxy scans every folder inside this directory during startup, so duplicate plugin folders can cause GUID conflicts or load an outdated version.
 
 ---
 
@@ -98,7 +99,7 @@ The plugin can retrieve Rockstar Social Club friend data, but GOG Galaxy does no
 
 ## 🔄 Resetting the Plugin Database (Troubleshooting)
 
-Reset the local plugin database only if the integration behaves unexpectedly or synchronization problems continue after restarting both applications.
+Reset the local plugin database if synchronization problems continue after restarting both applications.
 
 1. Close GOG Galaxy completely.
 2. Open `C:\ProgramData\GOG.com\Galaxy\storage\plugins\`.
@@ -108,17 +109,38 @@ Reset the local plugin database only if the integration behaves unexpectedly or 
    `rockstar_xxxxxxxxx-storage.db` -> `rockstar_xxxxxxxxx-storage.db.old`
 
 5. Start Rockstar Games Launcher and keep it open.
-6. Start GOG Galaxy and reconnect the Rockstar Games integration if necessary.
-7. Open the account menu in the top-right corner and select **Sync integrations**.
-8. Wait until the synchronization has finished.
+6. Start GOG Galaxy, reconnect the integration if necessary, select **Sync integrations** from the account menu, and wait for synchronization to finish.
 
 ---
 
-## ⚠️ Important
+## 🛠️ What to Do If the Plugin Has Problems
 
-Do **not** place backup copies of this plugin inside the `plugins\installed` directory.
+If the database reset above does not resolve the problem, create a clean session with fresh diagnostic files before contacting me. The reset procedure preserves the previous database as a `.old` file; the steps below remove the active database so the issue can be reproduced from a clean state.
 
-GOG Galaxy scans every folder inside this directory during startup. Duplicate plugin folders can lead to GUID conflicts or cause Galaxy to load an outdated version of the plugin.
+1. Close GOG Galaxy completely, including the system tray application.
+2. Open the following directory and delete the existing log files:
+
+   ```text
+   %ProgramData%\GOG.com\Galaxy\logs
+   ```
+
+3. Open the plugin storage directory:
+
+   ```text
+   C:\ProgramData\GOG.com\Galaxy\storage\plugins
+   ```
+
+   Delete only the active Rockstar Games database file starting with `rockstar_` and ending in `-storage.db`. Do not delete database files belonging to other integrations. If you are unsure which file is correct, do not delete anything from this directory.
+4. Start Rockstar Games Launcher and keep it open. Start GOG Galaxy, reproduce the problem, and then close GOG Galaxy completely so the new log is fully written.
+5. Return to the logs directory and locate the newly created Rockstar Games plugin log:
+
+   ```text
+   plugin-rockstar-774732b5-69c4-405c-b6c9-92cd55740cfe.log
+   ```
+
+Send only this log file, not the entire logs folder. Include the exact steps taken, the expected and actual result, and whether the problem can be reproduced.
+
+Without a fresh plugin log and a detailed description, I cannot reliably determine what is causing the problem. Once everything is ready, continue with [Support & Feedback](#-support--feedback) for contact options.
 
 ---
 
@@ -141,12 +163,12 @@ Big thanks to [MacStew](https://www.gog.com/u/MacStew) for testing and for track
 
 ## 🤝 Support & Feedback
 
-This project is developed and maintained by one person. Response times may vary, especially during periods when health-related limitations reduce available development time.
+**GitHub Issues are intentionally disabled.** Health-related limitations prevent me from reliably managing separate issue trackers across all of my plugin repositories.
 
-**GitHub Issues are intentionally disabled.**
+Before contacting me, follow **What to Do If the Plugin Has Problems** and prepare a fresh Rockstar Games plugin log with a detailed description.
 
-If you would like to report a bug or suggest an improvement, please use the contact form on my website:
+* **GOG:** Send me a message or add me as a friend through my [GOG profile](https://www.gog.com/u/melcom).
+* **Email:** `melcom @ gmx.net`
+* **Discord:** `.melcom` - the leading dot is part of the username. You can send me a message or add me as a friend.
 
-📩 [Contact form](https://melcom-creations.github.io/melcom-music/contact.html)
-
-Thank you for your patience and support!
+Logs can be attached directly or shared through Dropbox or OneDrive. Response times may vary depending on my health and available development time. Thank you for your understanding.
