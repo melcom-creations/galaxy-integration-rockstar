@@ -82,7 +82,7 @@ On Windows, the plugin determines available games from Rockstar Games Launcher l
 > 4. Open the account menu in the top-right corner and select **Sync integrations** exactly once.
 > 5. Wait until synchronization has finished. Do not start another manual synchronization while it is still processing.
 
-Once a supported game is installed and its required launcher is running, the plugin should detect it during synchronization.
+Once a supported game is installed and the required launcher is running, the plugin should detect it during the next synchronization.
 
 ---
 
