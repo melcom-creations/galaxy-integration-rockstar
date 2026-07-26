@@ -73,6 +73,11 @@ class RockstarPlugin(Plugin):
         self.friends_cache = []
         self.presence_cache = {}
         self.owned_games_cache = []
+        # Title IDs confirmed as owned in a previous session, restored from the persistent cache in
+        # handshake_complete(). Lets a title survive a session where the launcher log has rotated past its
+        # entry and the (off-by-default) legacy scraper found nothing, instead of silently dropping out of
+        # the library.
+        self.owned_title_ids_cache = set()
         self.last_online_game_check = time() - 300
         # The legacy Social Club played-games scraper uses undocumented browser endpoints. One failure opens this
         # circuit breaker for the rest of the process so a healthy local integration is not forced through repeated
@@ -110,6 +115,15 @@ class RockstarPlugin(Plugin):
             if key == "game_time_cache":
                 self.game_time_cache = pickle.loads(bytes.fromhex(value))
                 game_time_cache_in_persistent_cache = True
+            elif key == "owned_title_ids_cache":
+                try:
+                    self.owned_title_ids_cache = pickle.loads(bytes.fromhex(value))
+                    log.debug("ROCKSTAR_OWNED_CACHE_LOADED: Restored " + str(len(self.owned_title_ids_cache)) +
+                              " previously confirmed owned title ID(s) from the persistent cache.")
+                except Exception as e:
+                    log.warning("ROCKSTAR_OWNED_CACHE_LOAD_FAILED: Could not restore the persisted owned-games "
+                                "cache (" + safe_exception_repr(e) + "). Starting with an empty cache.")
+                    self.owned_title_ids_cache = set()
         if IS_WINDOWS and not game_time_cache_in_persistent_cache:
             # Fallback to local file cache when persistent cache has no game-time snapshot.
             file_location = os.path.join(self.documents_location, "RockstarPlayTimeCache.txt")
@@ -395,6 +409,13 @@ class RockstarPlugin(Plugin):
         if not self.is_authenticated():
             raise AuthenticationRequired()
 
+        # Seed with titles confirmed as owned in a previous session (see handshake_complete()). A title already
+        # known to be owned should not disappear just because the launcher log has since rotated past its entry
+        # and the (off-by-default) legacy scraper found nothing this session -- both are expected conditions, not
+        # proof of losing ownership. The log parser below still gets the seeded IDs and can explicitly disprove
+        # one via a "no branches!" entry, so a genuinely removed title (e.g. a refund) is still corrected.
+        owned_title_ids = list(set(owned_title_ids) | self.owned_title_ids_cache)
+
         # The log is in the Documents folder.
         current_log_count = 0
         log_file = None
@@ -431,7 +452,9 @@ class RockstarPlugin(Plugin):
             log.debug("ROCKSTAR_LAST_LOG_REACHED: All available launcher logs were checked. Keeping the existing "
                       "owned-games cache and confirmed local installations.")
 
-        # Last-resort ownership fallback: confirmed local installs (registry/log/Steam checks).
+        # Last-resort ownership fallback: confirmed local installs (registry/log/Steam checks). Only reached when
+        # the log, the online scraper, AND a previous session's persisted cache all found nothing at all -- i.e.
+        # a genuinely first-ever run, not a returning user whose log simply rotated.
         if not owned_title_ids and IS_WINDOWS and self._local_client:
             locally_installed = [title_id for title_id in games_cache
                                   if title_id != "launcher" and self._local_client.get_path_to_game(title_id)]
@@ -439,6 +462,11 @@ class RockstarPlugin(Plugin):
                 owned_title_ids = locally_installed
                 log.debug(f"ROCKSTAR_INSTALLED_FALLBACK: Log and online ownership checks both found nothing; "
                           f"falling back to confirmed installed titles (registry or Steam): {locally_installed}")
+
+        # Persist this session's confirmed ownership so it survives into the next plugin start.
+        self.owned_title_ids_cache = set(owned_title_ids)
+        self.persistent_cache['owned_title_ids_cache'] = pickle.dumps(self.owned_title_ids_cache).hex()
+        self.push_cache()
 
         for title_id in owned_title_ids:
             # Normalize incoming ids from different Rockstar endpoints into games_cache keys.

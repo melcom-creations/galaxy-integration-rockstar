@@ -4,6 +4,22 @@ All notable changes to this plugin will be documented in this file.
 
 ---
 
+## Version 2.0.11-64bit
+
+### Overview for Version 2.0.11-64bit
+
+Prevents titles successfully confirmed and stored by Version 2.0.11 from disappearing on later plugin restarts when the launcher log no longer covers them, and documents the durable recovery path for stale duplicate Rockstar sources retained by Galaxy. The new retention cache does not reconstruct titles that are already missing when the cache is first created or after the plugin storage is reset.
+
+### Fixed in Version 2.0.11-64bit
+
+- **Confirmed ownership is retained across later restarts:** previously, a title's ownership had to be reconfirmed from scratch every plugin session through the launcher log, the optional legacy scraper, or a local installation. Once Version 2.0.11 has successfully detected a title, that confirmed ownership is persisted for later sessions and is not discarded merely because the relevant launcher-log entry has rotated out. This protection starts only after Version 2.0.11 has confirmed the title; it cannot recover purchases that were already missing when the cache was first created, and deleting or resetting the plugin storage removes the retained ownership data.
+
+### Known Issues / Workarounds for Version 2.0.11-64bit
+
+- **Stale duplicate Rockstar sources retained by Galaxy:** old release keys such as `rockstar_12210` (duplicate GTA IV) and `rockstar_None` (duplicate GTA V Enhanced) can remain in the Galaxy cloud library even though the current plugin imports only the canonical `rockstar_1` and `rockstar_9001` releases. Deleting only the local `galaxy-2.0.db` rows is not a durable fix because Galaxy restores the stale ownership records from its backend. If affected, fully disconnect the Rockstar integration with its imported data and reconnect it; Galaxy then prunes the old Rockstar releases before the current plugin reimports the confirmed library, achievements, and game times.
+
+---
+
 ## Version 2.0.10-64bit
 
 ### Overview for Version 2.0.10-64bit
