@@ -51,7 +51,7 @@ The release ZIP already contains the required plugin folder. The resulting direc
 
 **Next step:** Continue with **First Start and Initial Sync** below.
 
-> [!WARNING]
+> [!IMPORTANT]
 > Do not place backup copies of this plugin inside the `plugins\installed` directory. GOG Galaxy scans every folder inside this directory during startup, so duplicate plugin folders can cause GUID conflicts or load an outdated version.
 
 ---
@@ -69,20 +69,11 @@ For the first synchronization after installing or updating the plugin:
 
 ---
 
-## 🎮 Library Visibility and Missing Games
+## 🎮 Library Visibility and Ownership Detection
 
-On Windows, the plugin determines available games from Rockstar Games Launcher logs and confirmed local installation data. Ownership information for uninstalled titles may not always be available, regardless of whether a game was purchased from Epic Games, Steam, or Rockstar Games.
+On Windows, the plugin determines Rockstar-owned games primarily from Rockstar Games Launcher logs and confirmed local installation data. Rockstar titles associated with Steam or Epic Games are shown only when they are installed. This prevents locally detected third-party versions from being treated as permanently owned Rockstar copies.
 
-> [!IMPORTANT]
-> If one or more games are missing from GOG Galaxy:
->
-> 1. Install each missing game through the launcher where it was purchased or activated: Epic Games Launcher, Steam, or Rockstar Games Launcher.
-> 2. Keep Rockstar Games Launcher open. For Epic Games or Steam purchases, keep the corresponding store launcher open as well.
-> 3. Start GOG Galaxy and connect the Rockstar Games integration if necessary.
-> 4. Open the account menu in the top-right corner and select **Sync integrations** exactly once.
-> 5. Wait until synchronization has finished. Do not start another manual synchronization while it is still processing.
-
-Once a supported game is installed and the required launcher is running, the plugin should detect it during the next synchronization.
+The original plugin also used an undocumented Social Club web request to retrieve previously played games. This legacy request is disabled by default because the current Rockstar sign-in flow no longer refreshes the required browser session reliably. Disabling it does not affect normal login, local game detection, launching, achievements, or local playtime tracking.
 
 ---
 

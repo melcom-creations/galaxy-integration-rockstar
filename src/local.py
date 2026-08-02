@@ -26,6 +26,7 @@ STEAM_GAME_IDS = {
     "mp3": 204100,   # Max Payne 3
     "bully": 12200,  # Bully: Scholarship Edition
     "rdr2": 1174180,  # Red Dead Redemption 2
+    "rdr": 2668510,   # Red Dead Redemption (2024 remaster)
     # Grand Theft Auto: The Trilogy - The Definitive Edition (Unreal remakes).
     "gta3unreal": 1546970,   # GTA III - The Definitive Edition
     "gtasaunreal": 1547000,  # GTA San Andreas - The Definitive Edition

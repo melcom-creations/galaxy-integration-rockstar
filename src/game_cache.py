@@ -143,6 +143,24 @@ games_cache = {
         "licenseInfo": LicenseInfo(LicenseType.SinglePurchase),
         "isPreOrder": False
     },
+    "rdr": {
+        "friendlyName": "Red Dead Redemption",
+        "guid": "Red Dead Redemption",
+        # Rockstar has not exposed this title in the get-games.json / title_metadata.json feeds used for the
+        # other entries above, so no official numeric rosTitleId is known yet. Galaxy requires a stable numeric
+        # game_id per release (create_game_from_title_id() does str(rosTitleId)) -- using None here produces the
+        # literal string "None" as the game_id, which is the same bug pattern that previously caused the
+        # rockstar_None duplicate-release issue for gta5_gen9 (see CHANGELOG). Following that entry's fix,
+        # assign a synthetic id in the same unused 900x range instead. Replace with the real value once
+        # Rockstar publishes it.
+        "rosTitleId": 9002,
+        "onlineTitleId": None,
+        "googleTagId": None,
+        "launchEXE": "RDR.exe",
+        "achievementId": None,
+        "licenseInfo": LicenseInfo(LicenseType.SinglePurchase),
+        "isPreOrder": False
+    },
     "gta4": {
         "friendlyName": "Grand Theft Auto IV",
         "guid": "Grand Theft Auto IV",

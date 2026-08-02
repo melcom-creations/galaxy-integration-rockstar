@@ -4,6 +4,30 @@ All notable changes to this plugin will be documented in this file.
 
 ---
 
+## Version 2.0.12-64bit
+
+### Overview for Version 2.0.12-64bit
+
+Adds support for the original Red Dead Redemption (2024 remaster), which was previously unrecognized by the plugin.
+
+### Added in Version 2.0.12-64bit
+
+- **Red Dead Redemption (remaster) support:** the plugin now recognizes the standalone "Red Dead Redemption" title (distinct from Red Dead Redemption 2), including detection of Steam-installed copies (App ID 2668510) and launching via `RDR.exe`. Rockstar has not yet published this title's official numeric launcher/Social Club IDs in the feeds this plugin reads from. Since `create_game_from_title_id()` turns `rosTitleId` into the release's Galaxy game_id via `str(...)`, it is given a synthetic stable id (`9002`, in the same reserved range as GTA V Enhanced's `9001`) rather than left unset -- an unset value would surface as the literal game_id `"None"`, the same bug pattern that previously caused the `rockstar_None` duplicate-release issue for GTA V Enhanced (see Version 2.0.11-64bit's Known Issues). `onlineTitleId`/`googleTagId` remain unset since achievements/playtime sync don't depend on them for this title; fill in the real values once Rockstar publishes them.
+
+### Fixed in Version 2.0.12-64bit
+
+- **Newly installed games missing from an existing Rockstar library:** confirmed local installations now supplement games already found in launcher logs or the persistent ownership cache. Previously, local installation detection was used only when the complete ownership result was empty, so a newly installed title such as Red Dead Redemption 2 could remain absent while other owned games were already known.
+
+### Known Issues / Workarounds for Version 2.0.12-64bit
+
+- **Red Dead Redemption not merged with the Steam release into a single library tile:** owning Red Dead Redemption on both Steam and Rockstar shows two separate tiles instead of one merged tile with a Steam/Rockstar launch choice. This merging is entirely handled by GOG's own game database matching cross-platform releases to one another; it is not something a plugin can set or influence. GOG's database most likely has not yet linked the two releases for this specific title. I will report this mapping issue directly to GOG Support.
+
+### Special Thanks for Version 2.0.12-64bit
+
+Special thanks to GOG forum member **[MacStew](https://www.gog.com/u/MacStew)** for the detailed testing, screenshots, and Rockstar Games Launcher logs. Without his report and follow-up verification, I would not have been able to fix Red Dead Redemption support because I do not own the game myself.
+
+---
+
 ## Version 2.0.11-64bit
 
 ### Overview for Version 2.0.11-64bit

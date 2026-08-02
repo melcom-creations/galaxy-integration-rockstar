@@ -452,16 +452,18 @@ class RockstarPlugin(Plugin):
             log.debug("ROCKSTAR_LAST_LOG_REACHED: All available launcher logs were checked. Keeping the existing "
                       "owned-games cache and confirmed local installations.")
 
-        # Last-resort ownership fallback: confirmed local installs (registry/log/Steam checks). Only reached when
-        # the log, the online scraper, AND a previous session's persisted cache all found nothing at all -- i.e.
-        # a genuinely first-ever run, not a returning user whose log simply rotated.
-        if not owned_title_ids and IS_WINDOWS and self._local_client:
+        # Merge confirmed local installations into the ownership result. This must also run when launcher logs or
+        # the persistent cache already contain other games; otherwise a newly installed title such as RDR2 remains
+        # missing until Rockstar happens to list it in a later launcher log.
+        if IS_WINDOWS and self._local_client:
             locally_installed = [title_id for title_id in games_cache
                                   if title_id != "launcher" and self._local_client.get_path_to_game(title_id)]
-            if locally_installed:
-                owned_title_ids = locally_installed
-                log.debug(f"ROCKSTAR_INSTALLED_FALLBACK: Log and online ownership checks both found nothing; "
-                          f"falling back to confirmed installed titles (registry or Steam): {locally_installed}")
+            newly_confirmed_installs = [title_id for title_id in locally_installed
+                                        if title_id not in owned_title_ids]
+            if newly_confirmed_installs:
+                owned_title_ids.extend(newly_confirmed_installs)
+                log.debug(f"ROCKSTAR_INSTALLED_OWNERSHIP: Adding confirmed installed titles "
+                          f"(registry or Steam): {newly_confirmed_installs}")
 
         # Persist this session's confirmed ownership so it survives into the next plugin start.
         self.owned_title_ids_cache = set(owned_title_ids)
