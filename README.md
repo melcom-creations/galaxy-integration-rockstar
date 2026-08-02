@@ -55,7 +55,7 @@ On Windows, ownership is determined from Rockstar Games Launcher logs, confirmed
 
 Once the plugin has successfully confirmed a supported title, it stores that title in its persistent ownership cache. The game should then remain in the Rockstar library inside GOG Galaxy after it is uninstalled. Deleting, renaming, or resetting the Rockstar plugin storage database starts the plugin with an empty ownership cache. Games that are neither installed nor still present in the available Rockstar Games Launcher logs cannot always be reconstructed automatically.
 
-### ♻️ Recovering Missing Games After a Storage Reset
+### 🔁 Recovering Missing Games After a Storage Reset
 
 > [!IMPORTANT]
 > If only currently installed titles remain visible after reconnecting the integration, the retained ownership cache was most likely empty or removed. The missing games must be confirmed again before the plugin can retain them for later sessions.
@@ -83,7 +83,7 @@ The plugin can retrieve Rockstar Social Club friend data, but GOG Galaxy does no
 
 ---
 
-## 🛠️ Troubleshooting
+## 🧰 Troubleshooting
 
 Before resetting anything, restart Rockstar Games Launcher and GOG Galaxy, keep Steam or Epic Games Launcher open when required, and complete one synchronization. For missing uninstalled games, use the recovery procedure above first.
 
