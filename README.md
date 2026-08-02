@@ -70,7 +70,7 @@ Once the plugin has successfully confirmed a supported title, it stores that tit
 
 ## ⚙️ Optional Configuration
 
-Copy `default_config.cfg` to the plugin root as `config.cfg` before changing settings. Edit only the copy and keep `default_config.cfg` unchanged.
+When GOG Galaxy starts the integration, the plugin automatically creates `config.cfg` in the plugin root if it does not already exist. Edit this generated file to change settings, and keep `default_config.cfg` unchanged.
 
 * `enable_steam_fallback=True` searches configured Steam libraries when a supported game is missing from the Windows uninstall registry. Disable it only if Steam detection is not wanted.
 * `enable_legacy_online_game_scraper=False` should remain disabled during normal use. It enables an undocumented Social Club request for advanced diagnostics and is automatically disabled for the session after a failure.
