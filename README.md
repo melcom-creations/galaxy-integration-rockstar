@@ -78,7 +78,7 @@ Once the plugin has successfully confirmed a supported title, it stores that tit
 
 The original plugin also used an undocumented Social Club web request to retrieve previously played games. This legacy request is disabled by default because the current Rockstar sign-in flow no longer refreshes the required browser session reliably. Disabling it does not affect normal login, local game detection, launching, achievements, or local playtime tracking.
 
-### Recovering Missing Games After a Storage Reset
+### ♻️ Recovering Missing Games After a Storage Reset
 
 > [!IMPORTANT]
 > If only currently installed titles remain visible after reconnecting the integration, the retained ownership cache was most likely empty or removed. The missing games must be confirmed again before the plugin can retain them for later sessions.
@@ -129,7 +129,7 @@ Reset the local plugin database only if synchronization problems continue after 
 5. Start Rockstar Games Launcher and keep it open.
 6. Start GOG Galaxy, reconnect the integration if necessary, select **Sync integrations** from the account menu, and wait for synchronization to finish.
 
-If only installed games remain afterward, follow [Recovering Missing Games After a Storage Reset](#recovering-missing-games-after-a-storage-reset). To undo the database reset instead, close GOG Galaxy completely, rename the newly created active Rockstar storage database by appending `.new`, and remove `.old` from the matching backup file name. Never replace or restore a plugin database while GOG Galaxy is running.
+If only installed games remain afterward, follow [Recovering Missing Games After a Storage Reset](#-recovering-missing-games-after-a-storage-reset). To undo the database reset instead, close GOG Galaxy completely, rename the newly created active Rockstar storage database by appending `.new`, and remove `.old` from the matching backup file name. Never replace or restore a plugin database while GOG Galaxy is running.
 
 ---
 
