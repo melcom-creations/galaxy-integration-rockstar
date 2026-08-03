@@ -55,7 +55,7 @@ On Windows, ownership is determined from Rockstar Games Launcher logs, confirmed
 
 Once the plugin has successfully confirmed a supported title, it stores that title in its persistent ownership cache. The game should then remain in the Rockstar library inside GOG Galaxy after it is uninstalled. Deleting, renaming, or resetting the Rockstar plugin storage database starts the plugin with an empty ownership cache. Games that are neither installed nor still present in the available Rockstar Games Launcher logs cannot always be reconstructed automatically.
 
-### 🔁 Recovering Missing Games When Only Installed Titles Are Visible
+### 🔎 What to Do If Games Are Missing
 
 > [!IMPORTANT]
 > This can happen during the first setup, after reconnecting the integration, after a storage reset, or occasionally even when the storage database was never deleted manually. If only currently installed titles are visible, the retained ownership cache does not yet contain the missing games. They must be confirmed again before the plugin can retain them for later sessions.
@@ -98,7 +98,7 @@ Before resetting anything, restart Rockstar Games Launcher and GOG Galaxy, keep 
 4. Append `.old` to the matching file name, for example: `rockstar_xxxxxxxxx-storage.db.old`.
 5. Start Rockstar Games Launcher, then GOG Galaxy. Reconnect the integration if necessary and complete one synchronization.
 
-If only installed games remain, follow [Recovering Missing Games When Only Installed Titles Are Visible](#-recovering-missing-games-when-only-installed-titles-are-visible). To undo the reset, close GOG Galaxy, append `.new` to the newly created active database, and remove `.old` from the backup. Never restore a database while Galaxy is running.
+If only installed games remain, follow [What to Do If Games Are Missing](#-what-to-do-if-games-are-missing). To undo the reset, close GOG Galaxy, append `.new` to the newly created active database, and remove `.old` from the backup. Never restore a database while Galaxy is running.
 
 ### 🧪 Create a Fresh Diagnostic Log
 
