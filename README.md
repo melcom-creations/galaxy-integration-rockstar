@@ -39,7 +39,7 @@ The archive already contains the required `rockstar_774732b5-69c4-405c-b6c9-92cd
 3. Start GOG Galaxy.
 4. Connect the Rockstar Games integration through **Settings -> Integrations** if necessary.
 5. Complete the Rockstar Social Club login when prompted.
-6. Select **Sync integrations** once from the account menu and wait until it finishes. Do not start another manual synchronization while it is running.
+6. Select **Sync integrations** once from the account menu and wait until it finishes. Do not start another manual synchronization while it is running. Galaxy may continue processing imported data afterward, so some changes can take several minutes or, in some cases, a few hours to appear.
 
 ## ⚙️ Optional Configuration
 
@@ -59,7 +59,7 @@ The plugin detects ownership from Rockstar Games Launcher logs, confirmed instal
 1. Temporarily install each missing supported title through Rockstar Games Launcher, Steam, or Epic Games Launcher. Install them one at a time if disk space is limited.
 2. Keep Steam or Epic Games Launcher running when applicable and wait until Rockstar Games Launcher recognizes the game.
 3. Restart Rockstar Games Launcher and GOG Galaxy, then select **Sync integrations** exactly once.
-4. Confirm that the game appears under Rockstar. It can normally be uninstalled again afterward and should remain visible.
+4. Allow Galaxy time to process the synchronization and confirm that the game eventually appears under Rockstar. This may take several minutes or, in some cases, a few hours. The game can normally be uninstalled again afterward and should remain visible.
 
 This may be necessary after the first connection, after reconnecting, after a storage reset, or if the retained ownership cache does not contain the title. Games that are neither installed nor present in current launcher logs cannot always be reconstructed automatically.
 
@@ -73,7 +73,7 @@ If an earlier plugin version has already imported incorrect achievements, a norm
 2. In **Settings -> Integrations**, fully disconnect the Rockstar integration and remove its imported data.
 3. Close GOG Galaxy and Rockstar Games Launcher completely.
 4. Start Rockstar Games Launcher, then GOG Galaxy. Reconnect the Rockstar integration and complete one synchronization.
-5. Galaxy should rebuild the Rockstar achievement data using only genuinely unlocked achievements.
+5. Allow Galaxy time to process the synchronization. The Rockstar achievement data should eventually be rebuilt using only genuinely unlocked achievements, but the updated result may take several minutes or, in some cases, a few hours to appear.
 
 Disconnecting the integration may also clear retained ownership information. If uninstalled games are missing after reconnecting, follow [What to Do If Games Are Missing](#-what-to-do-if-games-are-missing). Do not delete or edit Galaxy's main database manually.
 

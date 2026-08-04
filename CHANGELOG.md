@@ -16,7 +16,7 @@ Prevents partially progressed Rockstar achievements from being imported into GOG
 
 ### Known Issues / Workarounds for Version 2.0.13-64bit
 
-- **Incorrect achievements imported by an earlier plugin version:** a normal synchronization may not remove achievements that Galaxy has already stored for the Rockstar source. If affected, fully disconnect the Rockstar integration and remove its imported data, then reconnect it while using Version 2.0.13. Galaxy rebuilds the Rockstar achievement data from the filtered import, which was verified to remove the previously incorrect achievements while retaining the genuine unlocks.
+- **Incorrect achievements imported by an earlier plugin version:** a normal synchronization may not remove achievements that Galaxy has already stored for the Rockstar source. If affected, fully disconnect the Rockstar integration and remove its imported data, then reconnect it while using Version 2.0.13. Galaxy can then rebuild the Rockstar achievement data from the filtered import. The updated result may take several minutes or, in some cases, a few hours to appear. This procedure was verified to remove the previously incorrect achievements while retaining the genuine unlocks.
 
 ---
 
