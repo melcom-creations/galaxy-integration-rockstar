@@ -75,7 +75,7 @@ If an earlier plugin version has already imported incorrect achievements, a norm
 4. Start Rockstar Games Launcher, then GOG Galaxy. Reconnect the Rockstar integration and complete one synchronization.
 5. Allow Galaxy time to process the synchronization. The Rockstar achievement data should eventually be rebuilt using only genuinely unlocked achievements, but the updated result may take several minutes or, in some cases, a few hours to appear.
 
-Disconnecting the integration may also clear retained ownership information. If uninstalled games are missing after reconnecting, follow [What to Do If Games Are Missing](#-what-to-do-if-games-are-missing). Do not delete or edit Galaxy's main database manually.
+Games normally remain available after reconnecting the integration. In rare cases, some titles may be missing afterward; the same can happen after deleting or resetting the plugin storage database. If affected, follow [What to Do If Games Are Missing](#-what-to-do-if-games-are-missing). Do not delete or edit Galaxy's main database manually.
 
 ### 🧪 Create a Fresh Diagnostic Log
 
@@ -88,7 +88,7 @@ Disconnecting the integration may also clear retained ownership information. If 
 ### 🔄 Reset Plugin Storage
 
 > [!WARNING]
-> This is a last resort. Resetting plugin storage also clears retained ownership, so uninstalled games may disappear until they are confirmed again.
+> This is a last resort. Resetting plugin storage clears the plugin's retained ownership cache. Games that can still be rediscovered are imported again, but in some cases uninstalled titles may be missing until they are confirmed again.
 
 1. Close GOG Galaxy completely, including its system tray application.
 2. Open `C:\ProgramData\GOG.com\Galaxy\storage\plugins\`.
