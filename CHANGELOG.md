@@ -4,6 +4,22 @@ All notable changes to this plugin will be documented in this file.
 
 ---
 
+## Version 2.0.13-64bit
+
+### Overview for Version 2.0.13-64bit
+
+Prevents partially progressed Rockstar achievements from being imported into GOG Galaxy as unlocked and documents how to remove incorrect achievements imported by an earlier plugin version.
+
+### Fixed in Version 2.0.13-64bit
+
+- **Partially progressed achievements imported as unlocked:** Rockstar's `awardedAchievements` response can include achievements that merely contain partial progress and are explicitly marked with `achieved: false`. The plugin now excludes these progress-only entries and continues to import entries marked as achieved. This was verified with Red Dead Redemption 2, where Rockstar returned eight incomplete progress entries alongside two genuinely unlocked achievements and the plugin reported only the two unlocked achievements to Galaxy.
+
+### Known Issues / Workarounds for Version 2.0.13-64bit
+
+- **Incorrect achievements imported by an earlier plugin version:** a normal synchronization may not remove achievements that Galaxy has already stored for the Rockstar source. If affected, fully disconnect the Rockstar integration and remove its imported data, then reconnect it while using Version 2.0.13. Galaxy rebuilds the Rockstar achievement data from the filtered import, which was verified to remove the previously incorrect achievements while retaining the genuine unlocks.
+
+---
+
 ## Version 2.0.12-64bit
 
 ### Overview for Version 2.0.12-64bit

@@ -278,10 +278,20 @@ class RockstarPlugin(Plugin):
             unlocked_achievements = await self._http_client.get_json_from_request_strict(url)
             achievements_dict = unlocked_achievements["awardedAchievements"]
             achievements_list = []
+            progress_only_count = 0
             for key, value in achievements_dict.items():
+                # Despite its name, awardedAchievements can also contain partially progressed achievements. Only
+                # entries explicitly marked as achieved are unlocked. Preserve compatibility with older Rockstar
+                # responses that did not include this field by filtering only an explicit false value.
+                if isinstance(value, dict) and value.get("achieved") is False:
+                    progress_only_count += 1
+                    continue
                 achievement_num = key
                 unlock_time = await get_unix_epoch_time_from_date(value["dateAchieved"])
                 achievements_list.append(Achievement(unlock_time, achievement_id=achievement_num))
+            if progress_only_count:
+                log.debug(f"ROCKSTAR_ACHIEVEMENT_PROGRESS_FILTER: Ignored {progress_only_count} progress-only "
+                          f"achievement entries for {title_id}.")
             return achievements_list
 
     async def get_friends(self) -> List[UserInfo]:

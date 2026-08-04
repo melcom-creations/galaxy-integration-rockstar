@@ -87,6 +87,20 @@ The plugin can retrieve Rockstar Social Club friend data, but GOG Galaxy does no
 
 Before resetting anything, restart Rockstar Games Launcher and GOG Galaxy, keep Steam or Epic Games Launcher open when required, and complete one synchronization. For missing uninstalled games, use the recovery procedure above first.
 
+### 🏆 Remove Incorrectly Imported Achievements
+
+Version 2.0.13 and later exclude Rockstar achievement entries that contain only partial progress and are explicitly marked as not achieved. This prevents new progress-only entries from appearing as unlocked achievements in Galaxy.
+
+If an earlier plugin version has already imported incorrect achievements, a normal synchronization may not remove them:
+
+1. Confirm that Version 2.0.13 or later is installed.
+2. In **Settings -> Integrations**, fully disconnect the Rockstar integration and remove its imported data.
+3. Close GOG Galaxy and Rockstar Games Launcher completely.
+4. Start Rockstar Games Launcher, then GOG Galaxy. Reconnect the Rockstar integration and complete one synchronization.
+5. Galaxy should rebuild the Rockstar achievement data using only genuinely unlocked achievements.
+
+Disconnecting the integration may also clear retained ownership information. If uninstalled games are missing after reconnecting, follow [What to Do If Games Are Missing](#-what-to-do-if-games-are-missing). Do not delete or edit Galaxy's main database manually.
+
 ### 🔄 Reset Plugin Storage
 
 > [!WARNING]
