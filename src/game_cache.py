@@ -139,6 +139,8 @@ games_cache = {
         "onlineTitleId": 912,
         "googleTagId": "RDR2_PC",
         "launchEXE": "RDR2.exe",
+        # Direct RDR2.exe invocation creates a short-lived bootstrap process before RGL starts the real game.
+        "launchViaLauncher": True,
         "achievementId": "rdr2",
         "licenseInfo": LicenseInfo(LicenseType.SinglePurchase),
         "isPreOrder": False

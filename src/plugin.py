@@ -744,7 +744,9 @@ class RockstarPlugin(Plugin):
     async def check_game_statuses(self):
         self.updating_game_statuses = True
         try:
-            # Sweep all known titles so installs done outside plugin actions are detected on next ticks.
+            # Resolve installation state first, then use one tasklist snapshot for every installed title. This
+            # detects games started directly in Rockstar Games Launcher without spawning one process per title.
+            status_candidates = []
             for game in self.total_games_cache:
                 title_id = get_game_title_id_from_ros_title_id(str(game.game_id))
                 if title_id is None or title_id == "launcher" or title_id not in self.games_cache:
@@ -752,11 +754,22 @@ class RockstarPlugin(Plugin):
 
                 # Keep the sweep resilient: a single malformed title must not block updates for others.
                 try:
-                    new_local_game = self.check_game_status(title_id)
+                    game_installed = self._local_client.get_path_to_game(title_id)
                 except Exception as e:
                     log.warning(f"ROCKSTAR_STATUS_SWEEP_SKIPPED_TITLE: Could not check status for {title_id}: "
                                 f"{safe_exception_repr(e)}")
                     continue
+                status_candidates.append((title_id, game_installed))
+
+            installed_title_ids = [title_id for title_id, game_installed in status_candidates if game_installed]
+            running_pids = await self._local_client.game_pids_from_tasklist(installed_title_ids)
+
+            for title_id, game_installed in status_candidates:
+                detected_pid = running_pids.get(title_id)
+                if detected_pid and self.remember_running_game_pid(title_id, detected_pid):
+                    log.debug(f"ROCKSTAR_RUNNING_PROCESS_DETECTED: Detected {title_id} with PID {detected_pid}.")
+
+                new_local_game = self.check_game_status(title_id, game_installed)
 
                 current_local_game = self.local_games_cache.get(title_id)
 
@@ -781,6 +794,16 @@ class RockstarPlugin(Plugin):
         for key, value in self.running_games_info_list.items():
             info_list.append(value.get_pid())
         return str(info_list)
+
+    def remember_running_game_pid(self, title_id, pid):
+        current_info = self.running_games_info_list.get(title_id)
+        if current_info and str(current_info.get_pid()) == str(pid):
+            return False
+        if current_info is None:
+            current_info = RunningGameInfo()
+            self.running_games_info_list[title_id] = current_info
+        current_info.set_info(pid)
+        return True
 
     if IS_WINDOWS:
         async def launch_platform_client(self):
@@ -829,8 +852,7 @@ class RockstarPlugin(Plugin):
                 self.launching_title_ids.discard(title_id)
 
             if game_pid:
-                self.running_games_info_list[title_id] = RunningGameInfo()
-                self.running_games_info_list[title_id].set_info(game_pid)
+                self.remember_running_game_pid(title_id, game_pid)
                 log.debug(f"ROCKSTAR_PIDS: {self.list_running_game_pids()}")
                 local_game = LocalGame(game_id, LocalGameState.Running | LocalGameState.Installed)
                 self.update_local_game_status(local_game)

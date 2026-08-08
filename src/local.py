@@ -1,5 +1,7 @@
 from typing import Optional
 from winreg import *
+import csv
+import io
 import logging as log
 import os
 import re
@@ -485,21 +487,46 @@ class LocalClient:
             log.warning(f"ROCKSTAR_GAME_SIZE_FAILURE: The size of {title_id} could not be determined!")
         return size
 
-    async def game_pid_from_tasklist(self, title_id) -> str:
-        pid = None
-        tracked_key = "trackEXE" if "trackEXE" in games_cache[title_id] else "launchEXE"
-        tracked_exe = os.path.basename(games_cache[title_id][tracked_key])
-        # Force UTF-8 tasklist output for predictable parsing.
-        find_actual_pid = await asyncio.create_subprocess_shell(
-            f'chcp 65001 >nul & tasklist /FI "IMAGENAME eq {tracked_exe}" /FI "STATUS eq running" '
-            f'/FO LIST', stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        output, err = await find_actual_pid.communicate()
+    async def game_pids_from_tasklist(self, title_ids):
+        """Return one running PID per requested title from a single tasklist snapshot."""
+        tracked_titles = {}
+        for title_id in title_ids:
+            if title_id not in games_cache:
+                continue
+            tracked_key = "trackEXE" if "trackEXE" in games_cache[title_id] else "launchEXE"
+            tracked_exe = os.path.basename(games_cache[title_id][tracked_key]).casefold()
+            tracked_titles.setdefault(tracked_exe, []).append(title_id)
 
-        for line in output.decode(errors="replace").splitlines():
-            if "PID" in line:
-                pid = [str(s) for s in line.split() if s.isdigit()][0]
-                break
-        return pid
+        if not tracked_titles:
+            return {}
+
+        tasklist = await asyncio.create_subprocess_shell(
+            'chcp 65001 >nul & tasklist /FO CSV /NH',
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE)
+        output, err = await tasklist.communicate()
+        if tasklist.returncode:
+            log.warning(f"ROCKSTAR_TASKLIST_FAILURE: Could not read running processes: "
+                        f"{err.decode(errors='replace').strip()}")
+            return {}
+
+        running_pids = {}
+        rows = csv.reader(io.StringIO(output.decode(errors="replace")))
+        for row in rows:
+            if len(row) < 2:
+                continue
+            image_name = os.path.basename(row[0]).casefold()
+            if image_name not in tracked_titles:
+                continue
+            pid = row[1].replace(',', '').strip()
+            if not pid.isdigit():
+                continue
+            for title_id in tracked_titles[image_name]:
+                running_pids.setdefault(title_id, pid)
+        return running_pids
+
+    async def game_pid_from_tasklist(self, title_id) -> str:
+        return (await self.game_pids_from_tasklist([title_id])).get(title_id)
 
     async def launch_game_from_title_id(self, title_id):
         source, path = self.get_path_to_game_with_source(title_id)
@@ -583,7 +610,17 @@ class LocalClient:
             # because the renamed file no longer starts with "play".
             is_wrapper_exe = (os.path.basename(game_path).lower().startswith("play")
                                or os.path.basename(expected_exe).lower().startswith("play"))
-            if is_wrapper_exe:
+            if games_cache[title_id].get("launchViaLauncher"):
+                launcher_path = self.get_local_launcher_path()
+                if not launcher_path:
+                    log.error(f"ROCKSTAR_LAUNCH_FAILURE: Could not find the Rockstar Games Launcher to launch "
+                              f"{title_id}.")
+                    return None
+                # Use the same min-mode handoff observed when RDR2 asks the running Launcher to start the game,
+                # without creating the short-lived RDR2.exe bootstrap process first.
+                cmd = [launcher_path, f"-minmodeapp={title_id}"]
+                log.debug(f"ROCKSTAR_LAUNCH_VIA_RGL: Requesting {title_id} through Rockstar Games Launcher.")
+            elif is_wrapper_exe:
                 cmd.extend(["-launchTitleInFolder", path])
                 if "cmdLineArgs" in games_cache[title_id]:
                     cmd.extend(games_cache[title_id]["cmdLineArgs"].split())

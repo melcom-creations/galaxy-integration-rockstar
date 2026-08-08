@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 ---
 
+## Version 2.0.14-64bit
+
+### Overview for Version 2.0.14-64bit
+
+Improves Windows launch and running-state tracking by avoiding the short-lived RDR2 bootstrap process during Galaxy launches and detecting supported games started outside Galaxy.
+
+### Fixed in Version 2.0.14-64bit
+
+- **Red Dead Redemption 2 reported as starting twice by process-based tools:** the plugin previously launched `RDR2.exe` directly. That process first requested `Launcher.exe -minmodeapp=rdr2` and then exited before Rockstar Games Launcher started the actual game, causing process-based save managers and monitors to observe a short start/stop cycle followed by the real launch. The plugin now sends the verified `-minmodeapp=rdr2` request directly to Rockstar Games Launcher with the RDR2 installation directory as its working directory, avoiding the preliminary `RDR2.exe` bootstrap process.
+- **Games started outside Galaxy were not shown as running:** the periodic local-status sweep previously trusted only PIDs recorded by the plugin's own launch action. It now reads one Windows process snapshot per sweep, matches the configured `trackEXE` or `launchEXE` for every installed supported title, records newly detected PIDs, and reports the Running state to Galaxy. Games started directly through Rockstar Games Launcher can therefore update Galaxy's Play button and participate in local playtime tracking.
+
+---
+
 ## Version 2.0.13-64bit
 
 ### Overview for Version 2.0.13-64bit
